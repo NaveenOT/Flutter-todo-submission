@@ -22,7 +22,7 @@
 
   ### ---HOW TO RUN-----
 
-  1) git clone https://github.com/your-username/todo-app.git
+  1) git clone https://github.com/NaveenOT/Flutter-todo-submission
   2) flutter pub get
   3) flutter run
   
