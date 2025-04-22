@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../models/task.dart';
+
 class Tasks extends StatefulWidget {
   const Tasks({super.key});
 
@@ -19,7 +20,7 @@ class _TasksState extends State<Tasks> {
   }
 
   void _markDone(Task task) {
-    task.delete(); // or mark as done if you add that field
+    task.delete(); // or you could mark as done with a boolean
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Task completed!")),
     );
@@ -29,6 +30,51 @@ class _TasksState extends State<Tasks> {
     task.delete();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Task deleted!")),
+    );
+  }
+
+  void _editTask(BuildContext context, Task task) {
+    final titleController = TextEditingController(text: task.title);
+    final descriptionController = TextEditingController(text: task.description);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Task"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: "Title"),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(labelText: "Description"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                task.title = titleController.text;
+                task.description = descriptionController.text;
+                task.save(); // Save to Hive
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Task updated!")),
+                );
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -77,18 +123,31 @@ class _TasksState extends State<Tasks> {
                         return Card(
                           margin: const EdgeInsets.all(8),
                           child: ListTile(
-                            title: Text(task.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text("Due: ${task.dueDate}\n${task.description}"),
+                            title: Text(
+                              task.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                                "Due: ${task.dueDate}\n${task.description}"),
                             isThreeLine: true,
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.check, color: Colors.green),
+                                  icon: const Icon(Icons.check,
+                                      color: Colors.green),
                                   onPressed: () => _markDone(task),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.blue),
+                                  onPressed: () => _editTask(context, task),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close,
+                                      color: Colors.red),
                                   onPressed: () => _deleteTask(task),
                                 ),
                               ],
